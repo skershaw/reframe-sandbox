@@ -1,0 +1,13 @@
+{:require  [re-demo.core]
+ :init-fns [re-demo.core/init!]
+ :compiler-options
+ {:closure-warnings {:non-standard-jsdoc :off}
+  :optimizations    :none
+  :pseudo-names     true
+  :parallel-build   true
+  :output-dir       "js/compiled"
+  :asset-path       "js/compiled"
+  :modules          {:core {:entries   #{re-demo.core}
+                            :output-to "js/compiled/app.js"}
+                     :data {:entries   #{re-demo.data}
+                            :output-to "js/compiled/data.js"}}}}

@@ -1,30 +1,34 @@
 (ns re-demo.core
-  (:require [cljs.loader :as loader]
-            [reagent.core :as r]))
+  (:require [reagent.core :as r]
+            [re-frame.core :as f]
+            [re-frame.loggers :as log]
 
-(def state
-  (r/atom {:input "Hello, world!"}))
+            ;; Requried for use.
+            [re-demo.subs]
+            [re-demo.events]))
+
+;; Silence handler overwrite warnings on cljs reload.
+(log/set-loggers!
+ {:warn (fn [& args]
+          (when-not (re-find #"^re-frame: overwriting" (first args))
+            (apply js/console.warn args)))})
 
 (defn event->value
   [e]
   (-> e .-target .-value))
 
-(defn input-handler
-  [app e]
-  (let [value (event->value e)]
-   (loader/load :data
-     (fn []
-       ((resolve 're-demo.data/update-input) app value)))))
-
 (defn root
-  [app]
-  [:input {:value (:input @app)
-           :on-change (partial input-handler app)}])
+  []
+  (let [input (f/subscribe [:root/input])]
+    (fn []
+      [:span
+       [:b "Input "]
+       [:input {:value @input
+                :on-change #(f/dispatch [:root/input (event->value %)])}]])))
 
 (defn init!
   []
-  (r/render [root state]
-    (.getElementById js/document "container")))
-
-(defonce _
-  (loader/set-loaded! :core))
+  (f/clear-subscription-cache!)
+  (some->> "container"
+           (.getElementById js/document)
+           (r/render [root])))
